@@ -59,7 +59,9 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="monotouch" />
-    <Reference Include="MonoTouch.Dialog-1" />
+    <Reference Include="MonoTouch.Dialog">
+      <HintPath>..\..\..\Monotouch.Dialog\MonoTouch.Dialog\bin\iPhoneSimulator\Debug\MonoTouch.Dialog.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />

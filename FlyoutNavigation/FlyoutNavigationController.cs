@@ -11,7 +11,6 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-
 using System;
 using System.Drawing;
 using MonoTouch.CoreGraphics;
@@ -35,19 +34,18 @@ namespace FlyoutNavigation
 		UIView shadowView;
 		float startX;
 		UIColor tintColor;
-
 		UIImageView statusImage;
 		protected UIViewController[] viewControllers;
 		bool hideShadow;
 
-		public FlyoutNavigationController(IntPtr handle) : base(handle)
+		public FlyoutNavigationController (IntPtr handle) : base(handle)
 		{
-			Initialize();
+			Initialize ();
 		}
 
-		public FlyoutNavigationController(UITableViewStyle navigationStyle = UITableViewStyle.Plain)
+		public FlyoutNavigationController (UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
-			Initialize(navigationStyle);
+			Initialize (navigationStyle);
 		}
 
 		public UIColor TintColor
@@ -77,12 +75,11 @@ namespace FlyoutNavigation
 				hideShadow = value;
 				if (hideShadow)
 				{
-					if(mainView != null)
-						View.InsertSubviewBelow(shadowView, mainView);
+					if (mainView != null)
+						View.InsertSubviewBelow (shadowView, mainView);
 				}
-			
-			else
-				shadowView.RemoveFromSuperview();
+				else
+					shadowView.RemoveFromSuperview ();
 
 			}
 		}
@@ -105,10 +102,29 @@ namespace FlyoutNavigation
 			}
 		}
 
+		public DialogViewController Navigation
+		{
+			get { return navigation;}
+			set
+			{
+				EnsureInvokedOnMainThread (delegate
+				{
+					navigation = value;
+					Initialize(UITableViewStyle.Plain);
+				});
+			}
+		}
+
 		public RootElement NavigationRoot
 		{
 			get { return navigation.Root; }
-			set { EnsureInvokedOnMainThread(delegate { navigation.Root = value; }); }
+			set
+			{
+				EnsureInvokedOnMainThread (delegate
+				{
+					navigation.Root = value;
+				});
+			}
 		}
 
 		public UITableView NavigationTableView
@@ -121,11 +137,11 @@ namespace FlyoutNavigation
 			get { return viewControllers; }
 			set
 			{
-				EnsureInvokedOnMainThread(delegate
-					{
-						viewControllers = value;
-						NavigationItemSelected(GetIndexPath(SelectedIndex));
-					});
+				EnsureInvokedOnMainThread (delegate
+				{
+					viewControllers = value;
+					NavigationItemSelected (GetIndexPath (SelectedIndex));
+				});
 			}
 		}
 
@@ -135,9 +151,9 @@ namespace FlyoutNavigation
 			set
 			{
 				if (value)
-					HideMenu();
+					HideMenu ();
 				else
-					ShowMenu();
+					ShowMenu ();
 			}
 		}
 
@@ -146,9 +162,9 @@ namespace FlyoutNavigation
 			get
 			{
 				if (ForceMenuOpen || (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad &&
-									AlwaysShowLandscapeMenu &&
-									(InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft
-									|| InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)))
+					AlwaysShowLandscapeMenu &&
+					(InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft
+					|| InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)))
 					return true;
 				return false;
 			}
@@ -162,7 +178,10 @@ namespace FlyoutNavigation
 				if (selectedIndex == value)
 					return;
 				selectedIndex = value;
-				EnsureInvokedOnMainThread(delegate { NavigationItemSelected(value); });
+				EnsureInvokedOnMainThread (delegate
+				{
+					NavigationItemSelected (value);
+				});
 			}
 		}
 
@@ -174,16 +193,20 @@ namespace FlyoutNavigation
 		}
 
 		bool isIos7 = false;
-		void Initialize(UITableViewStyle navigationStyle = UITableViewStyle.Plain)
+
+		void Initialize (UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
 			DisableStatusBarMoving = true;
-			statusImage = new UIImageView();
-			navigation = new DialogViewController(navigationStyle, null);
+			statusImage = new UIImageView ();
+			if (navigation == null)
+			{
+				navigation = new DialogViewController (navigationStyle, null);
+			}
 			navigation.OnSelection += NavigationItemSelected;
 			RectangleF navFrame = navigation.View.Frame;
 			navFrame.Width = menuWidth;
 			navigation.View.Frame = navFrame;
-			View.AddSubview(navigation.View);
+			View.AddSubview (navigation.View);
 			//SearchBar = new UISearchBar(new RectangleF(0, 0, navigation.TableView.Bounds.Width, 44))
 			//	{
 			//		//Delegate = new SearchDelegate (this),
@@ -191,39 +214,41 @@ namespace FlyoutNavigation
 			//	};
 
 			TintColor = UIColor.Black;
-			var version = new System.Version(UIDevice.CurrentDevice.SystemVersion);
+			var version = new System.Version (UIDevice.CurrentDevice.SystemVersion);
 			isIos7 = version.Major >= 7;
-			if(isIos7)
-			navigation.TableView.TableHeaderView = new UIView(new RectangleF(0, 0, 320, 22))
-					{
-						BackgroundColor = UIColor.Clear
-					};
-			navigation.TableView.TableFooterView = new UIView(new RectangleF(0, 0, 100, 100)) {BackgroundColor = UIColor.Clear};
+			if (isIos7)
+				navigation.TableView.TableHeaderView = new UIView (new RectangleF (0, 0, 320, 22)) {
+					BackgroundColor = UIColor.Clear
+				};
+			navigation.TableView.TableFooterView = new UIView (new RectangleF (0, 0, 100, 100)) { BackgroundColor = UIColor.Clear };
 			navigation.TableView.ScrollsToTop = false;
-			shadowView = new UIView();
+			shadowView = new UIView ();
 			shadowView.BackgroundColor = UIColor.White;
-			shadowView.Layer.ShadowOffset = new SizeF(-5, -1);
+			shadowView.Layer.ShadowOffset = new SizeF (-5, -1);
 			shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
 			shadowView.Layer.ShadowOpacity = .75f;
-			closeButton = new UIButton();
-			closeButton.TouchUpInside += delegate { HideMenu(); };
+			closeButton = new UIButton ();
+			closeButton.TouchUpInside += delegate
+			{
+				HideMenu ();
+			};
 			AlwaysShowLandscapeMenu = true;
 
-			View.AddGestureRecognizer(new OpenMenuGestureRecognizer(this, new Selector("panned"), this));
+			View.AddGestureRecognizer (new OpenMenuGestureRecognizer (this, new Selector ("panned"), this));
 		}
 
 		public event UITouchEventArgs ShouldReceiveTouch;
 
-		internal bool shouldReceiveTouch(UIGestureRecognizer gesture, UITouch touch)
+		internal bool shouldReceiveTouch (UIGestureRecognizer gesture, UITouch touch)
 		{
 			if (ShouldReceiveTouch != null)
-				return ShouldReceiveTouch(gesture, touch);
+				return ShouldReceiveTouch (gesture, touch);
 			return true;
 		}
 
-		public override void ViewDidLayoutSubviews()
+		public override void ViewDidLayoutSubviews ()
 		{
-			base.ViewDidLayoutSubviews();
+			base.ViewDidLayoutSubviews ();
 			RectangleF navFrame = View.Bounds;
 //			navFrame.Y += UIApplication.SharedApplication.StatusBarFrame.Height;
 //			navFrame.Height -= navFrame.Y;
@@ -234,13 +259,13 @@ namespace FlyoutNavigation
 		}
 
 		[Export("panned")]
-		public void DragContentView(UIPanGestureRecognizer panGesture)
+		public void DragContentView (UIPanGestureRecognizer panGesture)
 		{
 			//Console.WriteLine("drag flyout");
 			if (ShouldStayOpen || mainView == null)
 				return;
 			RectangleF frame = mainView.Frame;
-			float translation = panGesture.TranslationInView(View).X;
+			float translation = panGesture.TranslationInView (View).X;
 			//Console.WriteLine (translation);
 
 			if (panGesture.State == UIGestureRecognizerState.Began)
@@ -254,124 +279,153 @@ namespace FlyoutNavigation
 					frame.X = 0;
 				else if (frame.X > frame.Width)
 					frame.X = menuWidth;
-				SetLocation(frame);
+				SetLocation (frame);
 			}
 			else if (panGesture.State == UIGestureRecognizerState.Ended)
 			{
-				float velocity = panGesture.VelocityInView(View).X;
+				float velocity = panGesture.VelocityInView (View).X;
 				//Console.WriteLine (velocity);
 				float newX = translation + startX;
-				Console.WriteLine(translation + startX);
-				bool show = (Math.Abs(velocity) > sidebarFlickVelocity)
+				Console.WriteLine (translation + startX);
+				bool show = (Math.Abs (velocity) > sidebarFlickVelocity)
 								? (velocity > 0)
-								: startX < menuWidth ? (newX > (menuWidth/2)) : newX > menuWidth;
+								: startX < menuWidth ? (newX > (menuWidth / 2)) : newX > menuWidth;
 				if (show)
-					ShowMenu();
+					ShowMenu ();
 				else
-					HideMenu();
+					HideMenu ();
 			}
 		}
 
-		public override void ViewWillAppear(bool animated)
+		public override void ViewWillAppear (bool animated)
 		{
 			RectangleF navFrame = navigation.View.Frame;
 			navFrame.Width = menuWidth;
 			navFrame.Location = PointF.Empty;
 			navigation.View.Frame = navFrame;
 			View.BackgroundColor = NavigationTableView.BackgroundColor;
-			base.ViewWillAppear(animated);
+
+			base.ViewWillAppear (animated);
 		}
 
-		protected void NavigationItemSelected(NSIndexPath indexPath)
+		protected void NavigationItemSelected (NSIndexPath indexPath)
 		{
-			int index = GetIndex(indexPath);
-			NavigationItemSelected(index);
+			int index = GetIndex (indexPath);
+			NavigationItemSelected (index);
 		}
 
-		protected void NavigationItemSelected(int index)
+		protected void NavigationItemSelected (int index)
 		{
 			selectedIndex = index;
 			if (viewControllers == null || viewControllers.Length <= index || index < 0)
 			{
 				if (SelectedIndexChanged != null)
-					SelectedIndexChanged();
+					SelectedIndexChanged ();
 				return;
 			}
-			if (ViewControllers[index] == null)
+			if (ViewControllers [index] == null)
 			{
 				if (SelectedIndexChanged != null)
-					SelectedIndexChanged();
+					SelectedIndexChanged ();
 				return;
 			}
-			if(!DisableStatusBarMoving)
-				UIApplication.SharedApplication.SetStatusBarHidden(false,UIStatusBarAnimation.Fade);
+			if (!DisableStatusBarMoving)
+				UIApplication.SharedApplication.SetStatusBarHidden (false, UIStatusBarAnimation.Fade);
 			bool isOpen = false;
 
 			if (mainView != null)
 			{
-				mainView.RemoveFromSuperview();
+				mainView.RemoveFromSuperview ();
 				isOpen = IsOpen;
 			}
-			CurrentViewController = ViewControllers[SelectedIndex];
+			CurrentViewController = ViewControllers [SelectedIndex];
 			RectangleF frame = View.Bounds;
 			if (isOpen || ShouldStayOpen)
 				frame.X = menuWidth;
 
-			setViewSize();
-			SetLocation(frame);
+			setViewSize ();
+			SetLocation (frame);
 
-			View.AddSubview(mainView);
-			AddChildViewController(CurrentViewController);
+			View.AddSubview (mainView);
+			AddChildViewController (CurrentViewController);
 			if (!HideShadow)
-				View.InsertSubviewBelow(shadowView, mainView);
+				View.InsertSubviewBelow (shadowView, mainView);
 
 
 			if (!ShouldStayOpen)
-				HideMenu();
+				HideMenu ();
 			if (SelectedIndexChanged != null)
-				SelectedIndexChanged();
+				SelectedIndexChanged ();
 		}
 
-		//bool isOpen {get{ return mainView.Frame.X == menuWidth; }}
+		protected void NavigationItemSelected ()
+		{
+			if (!DisableStatusBarMoving)
+				UIApplication.SharedApplication.SetStatusBarHidden (false, UIStatusBarAnimation.Fade);
+			bool isOpen = false;
 
-		public void ShowMenu()
+			if (mainView != null)
+			{
+				mainView.RemoveFromSuperview ();
+				isOpen = IsOpen;
+			}
+			RectangleF frame = View.Bounds;
+			if (isOpen || ShouldStayOpen)
+				frame.X = menuWidth;
+
+			setViewSize ();
+			SetLocation (frame);
+
+			View.AddSubview (mainView);
+			AddChildViewController (CurrentViewController);
+			if (!HideShadow)
+				View.InsertSubviewBelow (shadowView, mainView);
+
+
+			if (!ShouldStayOpen)
+				HideMenu ();
+			if (SelectedIndexChanged != null)
+				SelectedIndexChanged ();
+		}
+		//bool isOpen {get{ return mainView.Frame.X == menuWidth; }}
+		public void ShowMenu ()
 		{
 //			if (isOpen)
 //				return;
-			EnsureInvokedOnMainThread(delegate
-				{
-					//navigation.ReloadData ();
-					//isOpen = true;
-					closeButton.Frame = mainView.Frame;
-					shadowView.Frame = mainView.Frame;
-					var statusFrame = statusImage.Frame;
-					statusFrame.X = mainView.Frame.X;
-					statusImage.Frame = statusFrame;
+			EnsureInvokedOnMainThread (delegate
+			{
+				//navigation.ReloadData ();
+				//isOpen = true;
+				closeButton.Frame = mainView.Frame;
+				shadowView.Frame = mainView.Frame;
+				var statusFrame = statusImage.Frame;
+				statusFrame.X = mainView.Frame.X;
+				statusImage.Frame = statusFrame;
 //				if (!HideShadow)
 //					this.View.InsertSubviewBelow (shadowView, mainView);
-					if (!ShouldStayOpen)
-						View.AddSubview(closeButton);
-					UIView.BeginAnimations("slideMenu");
-					UIView.SetAnimationCurve(UIViewAnimationCurve.EaseIn);
-					//UIView.SetAnimationDuration(2);
-					setViewSize();
-					RectangleF frame = mainView.Frame;
-					frame.X = menuWidth;
-					SetLocation(frame);
-					setViewSize();
-					frame = mainView.Frame;
-					shadowView.Frame = frame;
-					closeButton.Frame = frame;
+				if (!ShouldStayOpen)
+					View.AddSubview (closeButton);
+				UIView.BeginAnimations ("slideMenu");
+				UIView.SetAnimationCurve (UIViewAnimationCurve.EaseIn);
+				//UIView.SetAnimationDuration(2);
+				setViewSize ();
+				RectangleF frame = mainView.Frame;
+				frame.X = menuWidth;
+				SetLocation (frame);
+				setViewSize ();
+				frame = mainView.Frame;
+				shadowView.Frame = frame;
+				closeButton.Frame = frame;
 
 
-					statusFrame.X = mainView.Frame.X;
-					statusImage.Frame = statusFrame;
+				statusFrame.X = mainView.Frame.X;
+				statusImage.Frame = statusFrame;
 
-					UIView.CommitAnimations();
-				});
+				UIView.CommitAnimations ();
+			});
 		}
 
-		void setViewSize()
+		void setViewSize ()
 		{
 			RectangleF frame = View.Bounds;
 			//frame.Location = PointF.Empty;
@@ -382,131 +436,135 @@ namespace FlyoutNavigation
 			mainView.Bounds = frame;
 		}
 
-		void SetLocation(RectangleF frame)
+		void SetLocation (RectangleF frame)
 		{
-			mainView.Layer.AnchorPoint = new PointF(.5f, .5f);
+			mainView.Layer.AnchorPoint = new PointF (.5f, .5f);
 			frame.Y = 0;
 			if (mainView.Frame.Location == frame.Location)
 				return;
 			frame.Size = mainView.Frame.Size;
-			var center = new PointF(frame.Left + frame.Width/2,
-									frame.Top + frame.Height/2);
+			var center = new PointF (frame.Left + frame.Width / 2,
+			                         frame.Top + frame.Height / 2);
 			mainView.Center = center;
 			shadowView.Center = center;
 
-			if (Math.Abs(frame.X - 0) > float.Epsilon)
+			if (Math.Abs (frame.X - 0) > float.Epsilon)
 			{
-				getStatus();
+				getStatus ();
 				var statusFrame = statusImage.Frame;
 				statusFrame.X = mainView.Frame.X;
 				statusImage.Frame = statusFrame;
 			}
 		}
-		public bool DisableStatusBarMoving {get;set;}
-		void getStatus()
+
+		public bool DisableStatusBarMoving { get; set; }
+
+		void getStatus ()
 		{
 			if (DisableStatusBarMoving || !isIos7 || statusImage.Superview != null)
 				return;
-			this.View.AddSubview(statusImage);
-			statusImage.Image = captureStatusBarImage();
+			this.View.AddSubview (statusImage);
+			statusImage.Image = captureStatusBarImage ();
 			statusImage.Frame = UIApplication.SharedApplication.StatusBarFrame;
 			UIApplication.SharedApplication.StatusBarHidden = true;
 
 		}
-		UIImage captureStatusBarImage()
+
+		UIImage captureStatusBarImage ()
 		{
 			var frame = UIApplication.SharedApplication.StatusBarFrame;
 			frame.Width *= 2;
 			frame.Height *= 2;
 			var image = CGImage.ScreenImage;
-			image = image.WithImageInRect(frame);
-			var newImage = new UIImage(image).Scale(UIApplication.SharedApplication.StatusBarFrame.Size, 2f);
+			image = image.WithImageInRect (frame);
+			var newImage = new UIImage (image).Scale (UIApplication.SharedApplication.StatusBarFrame.Size, 2f);
 			return newImage;
 		}
-		void hideStatus()
+
+		void hideStatus ()
 		{
 			if (!isIos7)
 				return;
-			statusImage.RemoveFromSuperview();
+			statusImage.RemoveFromSuperview ();
 			UIApplication.SharedApplication.StatusBarHidden = false;
 		}
 
-		public void HideMenu()
+		public void HideMenu ()
 		{
 //			if (!IsOpen)
 //				return;
-			EnsureInvokedOnMainThread(delegate
+			EnsureInvokedOnMainThread (delegate
+			{
+				//isOpen = false;
+				navigation.FinishSearch ();
+				closeButton.RemoveFromSuperview ();
+				shadowView.Frame = mainView.Frame;
+				var statusFrame = statusImage.Frame;
+				statusFrame.X = mainView.Frame.X;
+				statusImage.Frame = statusFrame;
+				//UIView.AnimationWillEnd += hideComplete;
+				UIView.Animate (.2, () =>
 				{
-					//isOpen = false;
-					navigation.FinishSearch();
-					closeButton.RemoveFromSuperview();
-					shadowView.Frame = mainView.Frame;
-					var statusFrame = statusImage.Frame;
-					statusFrame.X = mainView.Frame.X;
+					UIView.SetAnimationCurve (UIViewAnimationCurve.EaseInOut);
+					RectangleF frame = View.Bounds;
+					frame.X = 0;
+					setViewSize ();
+					SetLocation (frame);
+					shadowView.Frame = frame;
+					statusFrame.X = 0;
 					statusImage.Frame = statusFrame;
-					//UIView.AnimationWillEnd += hideComplete;
-					UIView.Animate(.2,	() =>
-						{
-							UIView.SetAnimationCurve(UIViewAnimationCurve.EaseInOut);
-							RectangleF frame = View.Bounds;
-							frame.X = 0;
-							setViewSize();
-							SetLocation(frame);
-							shadowView.Frame = frame;
-							statusFrame.X = 0;
-							statusImage.Frame = statusFrame;
-						}, hideComplete);
-				});
+				}, hideComplete);
+			});
 		}
 
 		[Export("animationEnded")]
-		void hideComplete()
+		void hideComplete ()
 		{
-			hideStatus();
-			shadowView.RemoveFromSuperview();
+			hideStatus ();
+			shadowView.RemoveFromSuperview ();
 		}
 
-		public void ResignFirstResponders(UIView view)
+		public void ResignFirstResponders (UIView view)
 		{
 			if (view.Subviews == null)
 				return;
 			foreach (UIView subview in view.Subviews)
 			{
 				if (subview.IsFirstResponder)
-					subview.ResignFirstResponder();
-				ResignFirstResponders(subview);
+					subview.ResignFirstResponder ();
+				ResignFirstResponders (subview);
 			}
 		}
 
-		public void ToggleMenu()
+		public void ToggleMenu ()
 		{
-			EnsureInvokedOnMainThread(delegate
-				{
-					if (!IsOpen && CurrentViewController != null && CurrentViewController.IsViewLoaded)
-						ResignFirstResponders(CurrentViewController.View);
-					if (IsOpen)
-						HideMenu();
-					else
-						ShowMenu();
-				});
+			EnsureInvokedOnMainThread (delegate
+			{
+				if (!IsOpen && CurrentViewController != null && CurrentViewController.IsViewLoaded)
+					ResignFirstResponders (CurrentViewController.View);
+				if (IsOpen)
+					HideMenu ();
+				else
+					ShowMenu ();
+			});
 		}
 
-		int GetIndex(NSIndexPath indexPath)
+		int GetIndex (NSIndexPath indexPath)
 		{
 			int section = 0;
 			int rowCount = 0;
 			while (section < indexPath.Section)
 			{
-				rowCount += navigation.Root[section].Count;
+				rowCount += navigation.Root [section].Count;
 				section ++;
 			}
 			return rowCount + indexPath.Row;
 		}
 
-		protected NSIndexPath GetIndexPath(int index)
+		protected NSIndexPath GetIndexPath (int index)
 		{
 			if (navigation.Root == null)
-				return NSIndexPath.FromRowSection(0, 0);
+				return NSIndexPath.FromRowSection (0, 0);
 			int currentCount = 0;
 			int section = 0;
 			foreach (Section element in navigation.Root)
@@ -518,72 +576,78 @@ namespace FlyoutNavigation
 			}
 
 			int row = index - currentCount;
-			return NSIndexPath.FromRowSection(row, section);
+			return NSIndexPath.FromRowSection (row, section);
 		}
 
-		public override bool ShouldAutorotateToInterfaceOrientation(UIInterfaceOrientation toInterfaceOrientation)
+		public override bool ShouldAutorotateToInterfaceOrientation (UIInterfaceOrientation toInterfaceOrientation)
 		{
 			if (DisableRotation)
 				return toInterfaceOrientation == InterfaceOrientation;
 
 			bool theReturn = CurrentViewController == null
 								? true
-								: CurrentViewController.ShouldAutorotateToInterfaceOrientation(toInterfaceOrientation);
+								: CurrentViewController.ShouldAutorotateToInterfaceOrientation (toInterfaceOrientation);
 			return theReturn;
 		}
 
-		public override UIInterfaceOrientationMask GetSupportedInterfaceOrientations()
+		public override UIInterfaceOrientationMask GetSupportedInterfaceOrientations ()
 		{
 			if (CurrentViewController != null)
-				return CurrentViewController.GetSupportedInterfaceOrientations();
+				return CurrentViewController.GetSupportedInterfaceOrientations ();
 			return UIInterfaceOrientationMask.All;
 		}
 
-		public override void WillRotate(UIInterfaceOrientation toInterfaceOrientation, double duration)
+		public override void WillRotate (UIInterfaceOrientation toInterfaceOrientation, double duration)
 		{
-			base.WillRotate(toInterfaceOrientation, duration);
+			base.WillRotate (toInterfaceOrientation, duration);
 		}
 
-		public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
+		public override void DidRotate (UIInterfaceOrientation fromInterfaceOrientation)
 		{
-			base.DidRotate(fromInterfaceOrientation);
+			base.DidRotate (fromInterfaceOrientation);
 
 			if (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone)
 				return;
 			switch (InterfaceOrientation)
 			{
-				case UIInterfaceOrientation.LandscapeLeft:
-				case UIInterfaceOrientation.LandscapeRight:
-					ShowMenu();
-					return;
-				default:
-					HideMenu();
-					return;
-			}
-			setViewSize();
-		}
-
-		public override void WillAnimateRotation(UIInterfaceOrientation toInterfaceOrientation, double duration)
-		{
-			base.WillAnimateRotation(toInterfaceOrientation, duration);
-		}
-
-		protected void EnsureInvokedOnMainThread(Action action)
-		{
-			if (IsMainThread())
-			{
-				action();
+			case UIInterfaceOrientation.LandscapeLeft:
+			case UIInterfaceOrientation.LandscapeRight:
+				ShowMenu ();
+				return;
+			default:
+				HideMenu ();
 				return;
 			}
-			BeginInvokeOnMainThread(() =>
-									action()
-				);
+			setViewSize ();
 		}
 
-		static bool IsMainThread()
+		public override void WillAnimateRotation (UIInterfaceOrientation toInterfaceOrientation, double duration)
+		{
+			base.WillAnimateRotation (toInterfaceOrientation, duration);
+		}
+
+		protected void EnsureInvokedOnMainThread (Action action)
+		{
+			if (IsMainThread ())
+			{
+				action ();
+				return;
+			}
+			BeginInvokeOnMainThread (() =>
+									action ()
+			);
+		}
+
+		static bool IsMainThread ()
 		{
 			return NSThread.Current.IsMainThread;
 			//return Messaging.bool_objc_msgSend(GetClassHandle("NSThread"), new Selector("isMainThread").Handle);
+		}
+
+		public void ChangeCurrentViewController (UIViewController Controller)
+		{
+			CurrentViewController = Controller;
+			NavigationItemSelected ();
 		}
 	}
 }
